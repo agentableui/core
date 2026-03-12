@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { buildManifest } from '../src/manifest/builder'
 import { buildMetaManifest } from '../src/manifest/meta'
+import { computeVersionHash } from '../src/manifest/hash'
 import type { AgentableConfig } from '../src/types'
 
 const config: AgentableConfig = {
@@ -84,6 +85,31 @@ describe('buildManifest', () => {
   it('throws for unknown role', () => {
     expect(() => buildManifest(config, 'nonexistent')).toThrow(/role/)
   })
+
+  it('throws when entrypoint not accessible by role', () => {
+    const restrictedConfig: AgentableConfig = {
+      ...config,
+      auth: { ...config.auth, restricted: ['results'] },
+    }
+    expect(() => buildManifest(restrictedConfig, 'restricted')).toThrow(/Entrypoint.*not accessible/)
+  })
+
+  it('throws for empty states when entrypoint is inaccessible', () => {
+    const emptyConfig: AgentableConfig = {
+      name: 'empty',
+      baseUrl: 'http://localhost',
+      entrypoint: 'home',
+      states: {},
+      auth: { public: '*' },
+      security: {
+        requireApiKey: false,
+        rateLimit: { requests: 100, window: '1m', scope: 'per-key' },
+        publicActions: [],
+        authenticatedActions: [],
+      },
+    }
+    expect(() => buildManifest(emptyConfig, 'public')).toThrow(/Entrypoint.*not accessible/)
+  })
 })
 
 describe('buildMetaManifest', () => {
@@ -101,5 +127,26 @@ describe('buildMetaManifest', () => {
     const meta = buildMetaManifest(config, '/api/v1')
     expect(meta.manifests.public).toBe('/api/v1/manifest/public')
     expect(meta.execute).toBe('/api/v1/execute')
+  })
+})
+
+describe('computeVersionHash', () => {
+  it('produces same hash for different property order', () => {
+    const a = { z: 1, a: 2, m: { b: 3, a: 4 } }
+    const b = { a: 2, m: { a: 4, b: 3 }, z: 1 }
+    expect(computeVersionHash(a)).toBe(computeVersionHash(b))
+  })
+
+  it('changes hash when content changes', () => {
+    const a = { name: 'store', version: '1.0' }
+    const b = { name: 'store', version: '1.1' }
+    expect(computeVersionHash(a)).not.toBe(computeVersionHash(b))
+  })
+
+  it('is deterministic across calls', () => {
+    const obj = { name: 'test', states: { home: { actions: {} } } }
+    const h1 = computeVersionHash(obj)
+    const h2 = computeVersionHash(obj)
+    expect(h1).toBe(h2)
   })
 })

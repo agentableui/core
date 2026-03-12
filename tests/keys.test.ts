@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { generateKey } from '../src/keys/generate'
@@ -80,5 +80,18 @@ describe('revokeKey', () => {
     await generateKey('agent', {}, keysPath)
     const result = await revokeKey('agui_k1_xxxx', keysPath)
     expect(result).toBe(false)
+  })
+})
+
+describe('loadKeys', () => {
+  it('returns empty store for nonexistent file', async () => {
+    const store = await loadKeys(join(tempDir, 'nonexistent.json'))
+    expect(store).toEqual({ keys: [] })
+  })
+
+  it('throws on corrupted JSON', async () => {
+    const corruptPath = join(tempDir, 'corrupt.json')
+    await writeFile(corruptPath, '{not valid json!!!', 'utf-8')
+    await expect(loadKeys(corruptPath)).rejects.toThrow(/Corrupted keys file/)
   })
 })

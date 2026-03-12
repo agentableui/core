@@ -48,4 +48,41 @@ describe('validateParams', () => {
     const errors = validateParams({}, { anything: 'goes' })
     expect(errors).toEqual([])
   })
+
+  it('rejects NaN', () => {
+    const errors = validateParams(action, { query: 'q', limit: NaN, active: true, sort: 'asc' })
+    expect(errors).toHaveLength(1)
+    expect(errors[0].param).toBe('limit')
+    expect(errors[0].message).toContain('finite')
+  })
+
+  it('rejects Infinity', () => {
+    const errors = validateParams(action, { query: 'q', limit: Infinity, active: true, sort: 'asc' })
+    expect(errors).toHaveLength(1)
+    expect(errors[0].param).toBe('limit')
+  })
+
+  it('rejects -Infinity', () => {
+    const errors = validateParams(action, { query: 'q', limit: -Infinity, active: true, sort: 'asc' })
+    expect(errors).toHaveLength(1)
+    expect(errors[0].param).toBe('limit')
+  })
+
+  it('accepts 0, negative numbers, and floats', () => {
+    const numAction: ActionConfig = { params: { n: { type: 'number', required: true } } }
+    expect(validateParams(numAction, { n: 0 })).toEqual([])
+    expect(validateParams(numAction, { n: -5 })).toEqual([])
+    expect(validateParams(numAction, { n: 3.14 })).toEqual([])
+  })
+
+  it('rejects non-string value for enum param', () => {
+    const errors = validateParams(action, { query: 'q', active: true, sort: 42 })
+    expect(errors).toHaveLength(1)
+    expect(errors[0].param).toBe('sort')
+  })
+
+  it('treats null as missing for optional param', () => {
+    const errors = validateParams(action, { query: 'q', limit: null, active: true, sort: 'asc' })
+    expect(errors).toEqual([])
+  })
 })

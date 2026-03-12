@@ -15,11 +15,17 @@ export interface KeyStore {
 }
 
 export async function loadKeys(storePath: string): Promise<KeyStore> {
+  let content: string
   try {
-    const content = await readFile(storePath, 'utf-8')
+    content = await readFile(storePath, 'utf-8')
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return { keys: [] }
+    throw err
+  }
+  try {
     return JSON.parse(content)
   } catch {
-    return { keys: [] }
+    throw new Error(`Corrupted keys file at ${storePath}: invalid JSON`)
   }
 }
 

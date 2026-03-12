@@ -11,6 +11,10 @@ export function buildManifest(config: AgentableConfig, role: string): RoleManife
     ? new Set(Object.keys(config.states))
     : new Set(allowedStates)
 
+  if (!stateNames.has(config.entrypoint)) {
+    throw new Error(`Entrypoint "${config.entrypoint}" is not accessible by role "${role}"`)
+  }
+
   const states: Record<string, ManifestState> = {}
 
   for (const stateName of stateNames) {

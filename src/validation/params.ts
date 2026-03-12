@@ -27,6 +27,8 @@ export function validateParams(
       case 'number':
         if (typeof value !== 'number') {
           errors.push({ param: name, message: `Parameter "${name}" must be a number` })
+        } else if (!Number.isFinite(value)) {
+          errors.push({ param: name, message: `Expected finite number, got ${value}` })
         }
         break
       case 'boolean':
