@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { buildManifest } from '../src/manifest/builder'
+import { buildMetaManifest } from '../src/manifest/meta'
 import type { AgentableConfig } from '../src/types'
 
 const config: AgentableConfig = {
@@ -82,5 +83,23 @@ describe('buildManifest', () => {
 
   it('throws for unknown role', () => {
     expect(() => buildManifest(config, 'nonexistent')).toThrow(/role/)
+  })
+})
+
+describe('buildMetaManifest', () => {
+  it('generates meta-manifest with default paths', () => {
+    const meta = buildMetaManifest(config)
+    expect(meta.agentable).toBe('1.0')
+    expect(meta.name).toBe('test-store')
+    expect(meta.manifests.public).toBe('/agentable/manifest/public')
+    expect(meta.manifests.admin).toBe('/agentable/manifest/admin')
+    expect(meta.execute).toBe('/agentable/execute')
+    expect(meta.conditions).toBe('/agentable/conditions')
+  })
+
+  it('uses custom pathPrefix', () => {
+    const meta = buildMetaManifest(config, '/api/v1')
+    expect(meta.manifests.public).toBe('/api/v1/manifest/public')
+    expect(meta.execute).toBe('/api/v1/execute')
   })
 })
