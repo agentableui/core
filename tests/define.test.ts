@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { defineAgentable } from '../src/define/agentable'
+import { defineHandlers } from '../src/define/handlers'
+import { defineConditions } from '../src/define/conditions'
 
 const validConfig = {
   name: 'test-app',
@@ -98,5 +100,28 @@ describe('defineAgentable', () => {
         },
       })
     ).toThrow(/values/)
+  })
+})
+
+describe('defineHandlers', () => {
+  it('returns handlers as-is (identity with type safety)', () => {
+    const handlers = defineHandlers()({
+      'home.search': async ({ query }) => ({ results: [query] }),
+    })
+    expect(handlers).toHaveProperty('home.search')
+    expect(typeof handlers['home.search']).toBe('function')
+  })
+})
+
+describe('defineConditions', () => {
+  it('returns conditions as-is (identity with type safety)', () => {
+    const conditions = defineConditions({
+      'cart-not-empty': {
+        description: 'Cart must have items',
+        check: () => true,
+      },
+    })
+    expect(conditions).toHaveProperty('cart-not-empty')
+    expect(conditions['cart-not-empty'].description).toBe('Cart must have items')
   })
 })
