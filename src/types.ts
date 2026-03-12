@@ -49,7 +49,7 @@ export interface RateLimitConfig {
 
 export type HandlerFn<TContext> = (params: Record<string, unknown>, ctx: TContext) => Promise<Record<string, unknown>>
 
-export type Handlers<TConfig, TContext> = Record<string, HandlerFn<TContext>>
+export type Handlers<_TConfig, TContext> = Record<string, HandlerFn<TContext>>
 
 export type ConditionCheckFn<TContext> = (ctx: TContext) => Promise<boolean> | boolean
 
@@ -58,7 +58,7 @@ export interface ConditionDef<TContext> {
   check: ConditionCheckFn<TContext>
 }
 
-export type Conditions<TConfig, TContext> = Record<string, ConditionDef<TContext>>
+export type Conditions<_TConfig, TContext> = Record<string, ConditionDef<TContext>>
 
 // ── Manifest types (output of buildManifest) ──
 
